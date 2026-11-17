@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Азық-түлік дүкені</title>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#16213a;--mute:#66708a;--line:#dfe4ee;--acc:#2f5bea;--accText:#fff;--paper:#fffef9;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111626;--card:#1a2138;--ink:#eef1fa;--mute:#97a0ba;--line:#2b3454;--acc:#6f8fff;--accText:#0b1020;--paper:#fffef9;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111626;--card:#1a2138;--ink:#eef1fa;--mute:#97a0ba;--line:#2b3454;--acc:#6f8fff;--accText:#0b1020;--paper:#fffef9;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Manrope",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);z-index:5}
+h1{font-size:22px;margin:0;letter-spacing:-.02em}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px}
+button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.cartbtn{background:var(--acc);color:var(--accText);padding:10px 16px;font-weight:700}
+main{max-width:1000px;margin:0 auto;padding:18px}
+.search{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.pic{aspect-ratio:1/1;display:grid;place-items:center;font-size:72px;position:relative}
+.pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.info{padding:12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.name{font-weight:700}
+.price{color:var(--mute);font-variant-numeric:tabular-nums}
+.add{margin-top:auto;background:var(--ink);color:var(--bg);padding:9px;font-weight:700}
+.cartsec{max-width:1000px;margin:8px auto 40px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:14px;width:calc(100% - 36px)}
+.cartsec h2{margin:0 0 6px}
+.th{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;font-size:26px;position:relative;overflow:hidden;flex:none}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.panel{position:fixed;inset:0;background:rgba(10,14,28,.55);display:none;justify-content:flex-end;z-index:20}
+.panel.open{display:flex}
+.drawer{background:var(--card);width:min(420px,100%);height:100%;overflow:auto;padding:18px;padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row .em{font-size:30px;width:44px;text-align:center}
+.row .t{flex:1;min-width:0}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:30px;height:30px;background:var(--bg);color:var(--ink);font-weight:700}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:16px 0}
+.primary{width:100%;background:var(--acc);color:var(--accText);padding:13px;font-weight:800}
+.ghost{background:var(--bg);color:var(--ink);padding:10px 14px;font-weight:700}
+.empty{color:var(--mute);padding:30px 0;text-align:center}
+.receipt{background:var(--paper);color:#1b1b1b;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;padding:18px;border-radius:4px;box-shadow:0 2px 0 var(--line);margin:12px 0}
+.receipt h2{margin:0 0 2px;text-align:center;font-size:17px}
+.receipt .c{text-align:center;color:#555}
+.receipt hr{border:0;border-top:1px dashed #999;margin:10px 0}
+.receipt .li{display:flex;gap:10px;align-items:center;margin:6px 0}
+.receipt .li .th{width:40px;height:40px;font-size:20px}
+.receipt .l{display:flex;justify-content:space-between;gap:10px}
+.receipt .big{font-weight:800;font-size:16px}
+.actions{display:flex;gap:8px}
+.actions>*{flex:1}
+@media print{body *{visibility:hidden}#receiptBox,#receiptBox *{visibility:visible}#receiptBox{position:absolute;left:0;top:0;width:100%;box-shadow:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Азық-түлік дүкені</h1>
+  <button class="cartbtn" id="openCart">Себет · <span id="cnt">0</span></button>
+</header>
+<main>
+  <input class="search" id="q" placeholder="Өнім іздеу" aria-label="Өнім іздеу">
+  <div class="grid" id="grid"></div>
+</main>
+
+<section class="cartsec" id="cartSec">
+  <h2 id="drawerTitle">Себет</h2>
+  <div id="cartView"></div>
+  <div id="receiptView" hidden></div>
+</section>
+
+<script>
+/* Сурет қосу: img өрісіне сілтеме жазыңыз (мысалы Google-дан сурет сілтемесі).
+   Сілтеме жұмыс істемесе, эмодзи көрсетіледі. */
+var PRODUCTS=[
+ {id:1,name:"Сүт 1 л",price:650,em:"🥛",bg:"#e6f0ff",img:"https://avatars.mds.yandex.net/i?id=edb4da6130bcdfc66f65f23a9bd6e6afe50da243-10927283-images-thumbs&n=13"},
+ {id:2,name:"Нан",price:180,em:"🍞",bg:"#f6e8d3",img:"https://avatars.mds.yandex.net/i?id=bd9934220fef1c0b3141275205abcfa8_l-4821391-images-thumbs&n=13"},
+ {id:3,name:"Жұмыртқа 10 дана",price:900,em:"🥚",bg:"#fff3d6",img:"https://avatars.mds.yandex.net/i?id=50f6dbfe1b8791265d3d6c2f93ad0cd7_l-4533750-images-thumbs&n=13"},
+ {id:4,name:"Алма 1 кг",price:1200,em:"🍎",bg:"#fde0e0",img:"https://avatars.mds.yandex.net/i?id=ff689d94477e05b0c5c748c87e05474d04ffde48-4268599-images-thumbs&n=13"},
+ {id:5,name:"Банан 1 кг",price:1100,em:"🍌",bg:"#fff6c9",img:"https://avatars.mds.yandex.net/i?id=3a13671cfcd74f37ce806f9f164fd4edf2a1195d-5879172-images-thumbs&n=13"},
+ {id:6,name:"Помидор 1 кг",price:1500,em:"🍅",bg:"#fddcd5",img:"https://www.dktr24.ru/b/d/nAgWUB67nUJkzJ7jP6aL-5fzgI63ocnihznEnPyatzfHJS_WWGKO0jBn_dASrFDLuZuT_2-QJYEqFeX9hDIsfGXf7WYPqlWHnSGtVFu0pnIHaDgdsDcliGyxLxafRTpJGQ=I6_SFHuVS7cbokUgWnvpMg.jpg"},
+ {id:7,name:"Тауық еті 1 кг",price:2800,em:"🍗",bg:"#fbe5d6",img:"https://avatars.mds.yandex.net/i?id=af8452ceebc49db847434c8629f560f8_l-4937470-images-thumbs&n=13"},
+ {id:8,name:"Ірімшік 300 г",price:3900,em:"🧀",bg:"#fff0bf",img:"https://avatars.mds.yandex.net/i?id=f955b46b1ca4bdb305c25a4fa6bc617b60b6ca8a-4078171-images-thumbs&n=13"},
+ {id:9,name:"Күріш 1 кг",price:900,em:"🍚",bg:"#eef0f4",img:"https://arbuz.kz/image/s3/arbuz-kz-products/file_name__cd2c3643-d47f-4c23-bc7a-ce45900510ec-4870006140613-001_1_jpg.jpg?w=720&amp;h=720&amp;_c=1775646204"},
+ {id:10,name:"Картоп 1 кг",price:400,em:"🥔",bg:"#efe3d2",img:"https://avatars.mds.yandex.net/get-eda/3793239/c8106c75cbecceca0ae8c1cc68deae92/orig"},
+ {id:11,name:"Шоколад",price:700,em:"🍫",bg:"#efe0d6",img:"https://avatars.mds.yandex.net/get-eda/16700655/9f3b6cf25962c8423766fe460539d44a/orig"},
+ {id:12,name:"Йогурт",price:350,em:"🥣",bg:"#f3ecff",img:"https://avatars.mds.yandex.net/i?id=b5afdc848e21cc9023342a7dd51bdd25_l-8218461-images-thumbs&n=13"},
+ {id:13,name:"Сары май 180 г",price:1800,em:"🧈",bg:"#fff3c4",img:"https://avatars.mds.yandex.net/i?id=8cde1499e38157750a86758994b6d09b_l-6311157-images-thumbs&n=13"},
+ {id:14,name:"Қант 1 кг",price:600,em:"🍬",bg:"#f4f4f8",img:"https://avatars.mds.yandex.net/i?id=87de24070e54faf249567548ad732202_l-12822362-images-thumbs&n=13"},
+ {id:15,name:"Шай",price:1500,em:"🍵",bg:"#e4f3df",img:"https://avatars.mds.yandex.net/i?id=b862b76a03756293b176515d40b865f1_l-5889061-images-thumbs&n=13"},
+ {id:16,name:"Кофе",price:3200,em:"☕",bg:"#eadfd3",img:"https://avatars.mds.yandex.net/get-mpic/19291485/2a0000019fc68103e3af81ffa658e48be26a/orig"},
+ {id:17,name:"Макарон 400 г",price:450,em:"🍝",bg:"#fdf0d0",img:"https://avatars.mds.yandex.net/i?id=699e62bcb89cbc77f2bcdb61ca70b7f8809fab37-4536877-images-thumbs&n=13"},
+ {id:18,name:"Сәбіз 1 кг",price:300,em:"🥕",bg:"#ffe5d0",img:"https://avatars.mds.yandex.net/i?id=9f27b2dd06abfe2e7d5066830e6c596f_l-5263755-images-thumbs&n=13"},
+ {id:19,name:"Қияр 1 кг",price:900,em:"🥒",bg:"#e0f2da",img:"https://avatars.mds.yandex.net/i?id=f47065c21fdaa6b6ab6690ff084d2d3b_l-13059231-images-thumbs&n=13"},
+ {id:20,name:"Лимон 1 кг",price:1800,em:"🍋",bg:"#fff8c9",img:"https://avatars.mds.yandex.net/i?id=1ac83a0d87b69d6e96881c3bfc7380b86cf581c5-5320579-images-thumbs&n=13"},
+ {id:21,name:"Шырын 1 л",price:800,em:"🧃",bg:"#ffe9d6",img:"https://avatars.mds.yandex.net/i?id=c6fcbf551bd7201e80eb407e6773ba61_l-8187788-images-thumbs&n=13"},
+ {id:22,name:"Су 1,5 л",price:200,em:"💧",bg:"#dff1fb",img:"https://avatars.mds.yandex.net/i?id=48d0e919b132ca16b7aecdb2008ce0fb_l-4988431-images-thumbs&n=13"},
+ {id:23,name:"Балық 1 кг",price:4500,em:"🐟",bg:"#dcecf7",img:"https://avatars.mds.yandex.net/i?id=817d17acd8c7e1a9f11595861ce19034_l-9265564-images-thumbs&n=13"},
+ {id:24,name:"Сиыр еті 1 кг",price:4200,em:"🥩",bg:"#fbdcdc",img:"https://avatars.mds.yandex.net/i?id=ab80185e8b98c1f59f80a3816e404245_l-5869685-images-thumbs&n=13"},
+ {id:25,name:"Печенье",price:500,em:"🍪",bg:"#f2e4d0",img:"https://i.ytimg.com/vi/nNkSB1w7ARM/maxresdefault.jpg"}
+];
+var cart={};
+var $=function(s){return document.querySelector(s)};
+var fmt=function(n){return n.toLocaleString("ru-RU")+" ₸"};
+function byId(id){return PRODUCTS.filter(function(p){return p.id===id})[0]}
+
+function pic(p){return '<span aria-hidden="true">'+p.em+'</span>'+(p.img?'<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" onerror="this.remove()">':"")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+function renderGrid(){
+  var q=$("#q").value.trim().toLowerCase();
+  var list=PRODUCTS.filter(function(p){return p.name.toLowerCase().indexOf(q)>-1});
+  $("#grid").innerHTML=list.map(function(p){
+    var img=p.img?'<img src="'+esc(p.img)+'" alt="'+esc(p.name)+'" onerror="this.remove()">':'';
+    return '<div class="item"><div class="pic" style="background:'+p.bg+'">'+pic(p)+'</div>'+
+      '<div class="info"><div class="name">'+esc(p.name)+'</div><div class="price">'+fmt(p.price)+'</div>'+
+      '<button class="add" data-id="'+p.id+'">Себетке қосу</button></div></div>';
+  }).join("")||'<div class="empty">Ештеңе табылмады</div>';
+}
+
+function count(){return Object.keys(cart).reduce(function(a,k){return a+cart[k]},0)}
+function sum(){return Object.keys(cart).reduce(function(a,k){return a+cart[k]*byId(+k).price},0)}
+
+function renderCart(){
+  $("#cnt").textContent=count();
+  var ids=Object.keys(cart);
+  if(!ids.length){$("#cartView").innerHTML='<div class="empty">Себет бос. Тауарды таңдап, «Себетке қосу» басыңыз.</div>';return}
+  $("#cartView").innerHTML=ids.map(function(k){
+    var p=byId(+k);
+    return '<div class="row"><div class="th" style="background:'+p.bg+'">'+pic(p)+'</div><div class="t"><div class="name">'+esc(p.name)+'</div><div class="price">'+fmt(p.price)+'</div></div>'+
+    '<div class="qty"><button data-dec="'+k+'" aria-label="Азайту">−</button><b>'+cart[k]+'</b><button data-inc="'+k+'" aria-label="Көбейту">+</button></div></div>';
+  }).join("")+
+  '<div class="total"><span>Барлығы</span><span>'+fmt(sum())+'</span></div>'+
+  '<button class="primary" id="checkout">Чек шығару</button>';
+}
+
+function receiptHTML(){
+  var d=new Date(),no=String(Math.floor(100000+Math.random()*900000));
+  var rows=Object.keys(cart).map(function(k){
+    var p=byId(+k),s=p.price*cart[k];
+    return '<div class="li"><div class="th" style="background:'+p.bg+'">'+pic(p)+'</div><div style="flex:1"><div>'+esc(p.name)+'</div><div class="l"><span>'+cart[k]+' × '+fmt(p.price)+'</span><span>'+fmt(s)+'</span></div></div></div>';
+  }).join("");
+  return '<div class="receipt" id="receiptBox"><h2>АЗЫҚ-ТҮЛІК ДҮКЕНІ</h2><div class="c">Сатып алу чегі № '+no+'</div>'+
+   '<div class="c">'+d.toLocaleDateString("ru-RU")+' '+d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+'</div><hr>'+rows+'<hr>'+
+   '<div class="l big"><span>ЖИЫНЫ</span><span>'+fmt(sum())+'</span></div><hr><div class="c">Сатып алғаныңызға рахмет!</div></div>'+
+   '<div class="actions"><button class="primary" id="print">Басып шығару</button><button class="ghost" id="newOrder">Жаңа тапсырыс</button></div>';
+}
+
+document.addEventListener("click",function(e){
+  var t=e.target;
+  if(t.dataset.id){cart[t.dataset.id]=(cart[t.dataset.id]||0)+1;renderCart()}
+  if(t.dataset.inc){cart[t.dataset.inc]++;renderCart()}
+  if(t.dataset.dec){if(--cart[t.dataset.dec]<=0)delete cart[t.dataset.dec];renderCart()}
+  if(t.id==="openCart"||(t.closest&&t.closest("#openCart"))){$("#cartSec").scrollIntoView({behavior:"smooth"})}
+    if(t.id==="checkout"){
+    $("#cartView").hidden=true;$("#drawerTitle").textContent="Чек";
+    $("#receiptView").hidden=false;$("#receiptView").innerHTML=receiptHTML();$("#cartSec").scrollIntoView({behavior:"smooth"});
+  }
+  if(t.id==="print"){window.print()}
+  if(t.id==="newOrder"){
+    cart={};$("#receiptView").hidden=true;$("#cartView").hidden=false;$("#drawerTitle").textContent="Себет";
+    renderCart();window.scrollTo({top:0,behavior:"smooth"});
+  }
+});
+$("#q").addEventListener("input",renderGrid);
+renderGrid();renderCart();
+</script>
+</body>
+</html>
